@@ -9,29 +9,55 @@ import com.example.kaijuapp_grupo4.model.Producto
 import com.example.kaijuapp_grupo4.model.ProductoErrores
 import com.example.kaijuapp_grupo4.model.ProductoFormState
 import com.example.kaijuapp_grupo4.model.VentaUiState
+import com.example.kaijuapp_grupo4.repository.EstadoDataStore
 import com.example.kaijuapp_grupo4.repository.InventarioRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class InventarioViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository: InventarioRepository = AppDatabase.obtener(application).let { db ->
-        InventarioRepository(db.productoDao(), db.movimientoDao())
+    private val estadoDataStore = EstadoDataStore(application)
+
+    val repository: InventarioRepository = AppDatabase.obtener(application).let { db ->
+        InventarioRepository(
+            productoDao = db.productoDao(),
+            movimientoDao = db.movimientoDao(),
+            operacionPendienteDao = db.operacionPendienteDao()
+        )
     }
 
-    val productos: StateFlow<List<Producto>> = repository.productos
+    val sucursalActiva: StateFlow<String> = estadoDataStore.obtenerSucursalActiva()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "San Bernardo")
+
+    // El inventario principal en Room cambia automáticamente al cambiar de sucursal en el perfil
+    val productos: StateFlow<List<Producto>> = sucursalActiva
+        .flatMapLatest { sucursal ->
+            repository.observarProductosPorSucursal(sucursal)
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     // ---------- Formulario de producto ----------
 
     private val _formState = MutableStateFlow(ProductoFormState())
     val formState: StateFlow<ProductoFormState> = _formState.asStateFlow()
+
+    init {
+        // Sincronizar automáticamente el formulario con la sucursal activa del perfil
+        viewModelScope.launch {
+            sucursalActiva.collect { sucursal ->
+                _formState.update { it.copy(sucursal = sucursal) }
+            }
+        }
+    }
 
     fun onNombreChange(valor: String) {
         _formState.update {
@@ -82,7 +108,7 @@ class InventarioViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun limpiarFormulario() {
-        _formState.value = ProductoFormState()
+        _formState.value = ProductoFormState(sucursal = sucursalActiva.value)
     }
 
     fun validarFormulario(): Boolean {
@@ -133,7 +159,7 @@ class InventarioViewModel(application: Application) : AndroidViewModel(applicati
             sucursal = estado.sucursal
         )
         viewModelScope.launch { repository.agregarProducto(nuevoProducto) }
-        _formState.value = ProductoFormState()
+        _formState.value = ProductoFormState(sucursal = sucursalActiva.value)
         return true
     }
 

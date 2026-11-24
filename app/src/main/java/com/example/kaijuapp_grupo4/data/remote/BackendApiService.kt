@@ -28,7 +28,7 @@ interface BackendApiService {
     @GET("api/productos")
     suspend fun obtenerProductosPorSucursal(
         @Query("sucursal") sucursal: String
-    ): List<Producto>
+    ): Response<List<Producto>>
 
     @GET("api/sucursales/{sucursal}/stock-bajo")
     suspend fun obtenerStockBajo(

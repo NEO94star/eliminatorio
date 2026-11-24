@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.kaijuapp_grupo4.ui.screens.FormularioProductoScreen
 import com.example.kaijuapp_grupo4.ui.screens.HomeScreen
+import com.example.kaijuapp_grupo4.ui.screens.InventarioExtraScreen
 import com.example.kaijuapp_grupo4.ui.screens.InventarioScreen
 import com.example.kaijuapp_grupo4.ui.screens.PerfilScreen
 import com.example.kaijuapp_grupo4.ui.screens.ResumenVentaScreen
@@ -59,6 +60,8 @@ fun AppNavigation(
         composable(route = Screen.Perfil.route) {
             PerfilScreen(navController = navController, perfilViewModel = perfilViewModel)
         }
+        composable(route = Screen.InventarioExtra.route) {
+            InventarioExtraScreen(navController = navController, inventarioViewModel = inventarioViewModel)
+        }
     }
 }
-

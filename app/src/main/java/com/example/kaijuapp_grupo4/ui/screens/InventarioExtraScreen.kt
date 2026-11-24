@@ -24,6 +24,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,131 +37,99 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.kaijuapp_grupo4.model.Producto
-import com.example.kaijuapp_grupo4.model.Sucursal
 import com.example.kaijuapp_grupo4.ui.theme.AzulLlegadas
 import com.example.kaijuapp_grupo4.ui.theme.RojoMerma
 import com.example.kaijuapp_grupo4.ui.theme.RojoSuaveFondo
 import com.example.kaijuapp_grupo4.ui.theme.RojoSuaveTexto
 import com.example.kaijuapp_grupo4.ui.theme.VerdeAzulado
 import com.example.kaijuapp_grupo4.ui.theme.VerdeVentas
+import com.example.kaijuapp_grupo4.repository.InventarioRepository.ResultadoActualizacionCatalogo
+import com.example.kaijuapp_grupo4.viewmodel.InventarioViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InventarioExtraScreen(navController: NavController) {
+fun InventarioExtraScreen(
+    navController: NavController,
+    inventarioViewModel: InventarioViewModel
+) {
+    val scope = rememberCoroutineScope()
+    val listaSucursales = listOf("San Bernardo", "Maipú", "Persa BioBío")
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    val sucursalActual = listaSucursales[selectedTabIndex]
 
-    var sucursales by remember {
-        mutableStateOf(
-            listOf(
-                Sucursal(
-                    id = "san_bernardo",
-                    nombre = "San Bernardo",
-                    direccion = "Av. América 450, San Bernardo",
-                    diasSinCambios = 0,
-                    tiempoTranscurridoFormateado = "Hace 15 minutos",
-                    cambioLlegados = 3,
-                    cambioVendidos = 5,
-                    cambioMerma = 1,
-                    productos = listOf(
-                        Producto("sb-1", "Polera Kaiju Godzilla", "Ropa", 15990.0, 15, 5, sucursal = "San Bernardo"),
-                        Producto("sb-2", "Figura Ghidorah Articulada", "Coleccionables", 34990.0, 4, 2, sucursal = "San Bernardo"),
-                        Producto("sb-3", "Manga Kaiju No. 8 Vol. 1", "Libros", 8990.0, 20, 5, sucursal = "San Bernardo")
-                    )
-                ),
-                Sucursal(
-                    id = "central",
-                    nombre = "Central",
-                    direccion = "Av. Libertador B. O'Higgins 1200, Santiago",
-                    diasSinCambios = 1,
-                    tiempoTranscurridoFormateado = "Hace 1 hora",
-                    cambioLlegados = 10,
-                    cambioVendidos = 12,
-                    cambioMerma = 0,
-                    productos = listOf(
-                        Producto("ct-1", "Polera Kaiju Classic", "Ropa", 15990.0, 25, 5, sucursal = "Central"),
-                        Producto("ct-2", "Figura Godzilla 15cm", "Coleccionables", 29990.0, 8, 5, sucursal = "Central")
-                    )
-                ),
-                Sucursal(
-                    id = "norte",
-                    nombre = "Norte",
-                    direccion = "Av. Independencia 3400, Conchalí",
-                    diasSinCambios = 0,
-                    tiempoTranscurridoFormateado = "Hace 45 minutos",
-                    cambioLlegados = 5,
-                    cambioVendidos = 3,
-                    cambioMerma = 0,
-                    productos = listOf(
-                        Producto("nt-1", "Taza Logo Kaiju", "Accesorios", 7990.0, 18, 5, sucursal = "Norte")
-                    )
-                ),
-                Sucursal(
-                    id = "maipu",
-                    nombre = "Maipú",
-                    direccion = "Av. Pajaritos 2100, Maipú",
-                    diasSinCambios = 2,
-                    tiempoTranscurridoFormateado = "Hace 2 días",
-                    cambioLlegados = 0,
-                    cambioVendidos = 8,
-                    cambioMerma = 0,
-                    productos = listOf(
-                        Producto("mp-1", "Taza Logo Kaiju Edición Limitada", "Accesorios", 7990.0, 12, 4, sucursal = "Maipú"),
-                        Producto("mp-2", "Figura Mechagodzilla 20cm", "Coleccionables", 39990.0, 2, 3, sucursal = "Maipú"),
-                        Producto("mp-3", "Polera Mothra Vintage", "Ropa", 16990.0, 8, 3, sucursal = "Maipú")
-                    )
-                ),
-                Sucursal(
-                    id = "persa_biobio",
-                    nombre = "Persa BioBío",
-                    direccion = "Placer 650, Franklin / BioBío",
-                    diasSinCambios = 35,
-                    tiempoTranscurridoFormateado = "Hace 35 días",
-                    cambioLlegados = 0,
-                    cambioVendidos = 0,
-                    cambioMerma = 2,
-                    productos = listOf(
-                        Producto("bb-1", "Poster Kaiju Retro 60s", "Decoración", 4990.0, 25, 5, sucursal = "Persa BioBío"),
-                        Producto("bb-2", "Llavero Rodan Metálico", "Accesorios", 3990.0, 30, 10, sucursal = "Persa BioBío"),
-                        Producto("bb-3", "Figura Godzilla Shin 18cm", "Coleccionables", 28990.0, 5, 2, sucursal = "Persa BioBío")
-                    )
-                )
-            )
-        )
+    // Productos reales desde Room DB para la sucursal seleccionada
+    var productosSucursalReal by remember { mutableStateOf<List<Producto>>(emptyList()) }
+
+    var textoBusqueda by remember { mutableStateOf("") }
+    var cargandoSincronizacion by remember { mutableStateOf(false) }
+    var mensajeResultado by remember { mutableStateOf<String?>(null) }
+    var errorResultado by remember { mutableStateOf(false) }
+
+    var tiempoTranscurrido by remember { mutableStateOf("Hace un momento") }
+    var noDisponible by remember { mutableStateOf(false) }
+
+    // Observar productos reales de la sucursal seleccionada
+    LaunchedEffect(selectedTabIndex) {
+        inventarioViewModel.repository.observarProductosPorSucursal(sucursalActual)
+            .collect { lista ->
+                productosSucursalReal = lista
+            }
     }
 
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
-    var textoBusqueda by remember { mutableStateOf("") }
-    var mensajeSincronizacion by remember { mutableStateOf(false) }
-
-    val sucursalActual = sucursales[selectedTabIndex]
-
-    val productosFiltrados = remember(sucursalActual, textoBusqueda) {
-        if (textoBusqueda.isBlank()) {
-            sucursalActual.productos
+    // Al cambiar de pestaña, consultar estado real del backend
+    LaunchedEffect(selectedTabIndex) {
+        textoBusqueda = ""
+        mensajeResultado = null
+        val estadoBackend = inventarioViewModel.repository.obtenerEstadoSincronizacionBackend(sucursalActual)
+        if (estadoBackend != null) {
+            tiempoTranscurrido = estadoBackend.textoUltimaSincronizacion
+                .ifBlank { "Sin registro de actualización" }
+            noDisponible = estadoBackend.noDisponible || estadoBackend.estado == "NO_DISPONIBLE"
+            errorResultado = false
         } else {
-            sucursalActual.productos.filter {
+            tiempoTranscurrido = "No disponible"
+            noDisponible = false
+            mensajeResultado = "No se pudo consultar el estado del backend; se conservan los datos locales."
+            errorResultado = true
+        }
+    }
+
+    val productosFiltrados = remember(productosSucursalReal, textoBusqueda) {
+        if (textoBusqueda.isBlank()) {
+            productosSucursalReal
+        } else {
+            productosSucursalReal.filter {
                 it.nombre.contains(textoBusqueda, ignoreCase = true) ||
                         it.categoria.contains(textoBusqueda, ignoreCase = true)
             }
         }
     }
 
+    // Conteos reales de movimientos en la sucursal
+    val totalUnidades = productosSucursalReal.sumOf { it.cantidadDisponible }
+    val mermasContadas = productosSucursalReal.count { it.cantidadDisponible <= 0 }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Inventario Extra Multi-Sucursal") },
+                title = { Text("Inventario Multi-Sucursal") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -184,16 +153,13 @@ fun InventarioExtraScreen(navController: NavController) {
                 edgePadding = 16.dp,
                 containerColor = MaterialTheme.colorScheme.surfaceVariant
             ) {
-                sucursales.forEachIndexed { index, sucursal ->
+                listaSucursales.forEachIndexed { index, sucursal ->
                     Tab(
                         selected = selectedTabIndex == index,
-                        onClick = {
-                            selectedTabIndex = index
-                            textoBusqueda = ""
-                        },
+                        onClick = { selectedTabIndex = index },
                         text = {
                             Text(
-                                text = "Sucursal ${sucursal.nombre}",
+                                text = "Sucursal $sucursal",
                                 fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal
                             )
                         }
@@ -210,11 +176,7 @@ fun InventarioExtraScreen(navController: NavController) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (!sucursalActual.estaDisponible) {
-                            RojoSuaveFondo
-                        } else {
-                            MaterialTheme.colorScheme.surfaceVariant
-                        }
+                        containerColor = if (noDisponible) RojoSuaveFondo else MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
@@ -225,18 +187,13 @@ fun InventarioExtraScreen(navController: NavController) {
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Sucursal ${sucursalActual.nombre}",
+                                    text = "Sucursal $sucursalActual",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
-                                Text(
-                                    text = sucursalActual.direccion,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
                             }
 
-                            if (!sucursalActual.estaDisponible) {
+                            if (noDisponible) {
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(6.dp))
@@ -253,32 +210,33 @@ fun InventarioExtraScreen(navController: NavController) {
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
 
                         Text(
-                            text = "Última actualización: ${sucursalActual.tiempoTranscurridoFormateado}",
+                            text = "Última actualización: $tiempoTranscurrido",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
 
+                        // Insignias con conteos de movimientos reales
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             InsigniaCambio(
-                                texto = "+${sucursalActual.cambioLlegados} llegados",
+                                texto = "+${productosSucursalReal.size} cargados",
                                 colorFondo = AzulLlegadas.copy(alpha = 0.15f),
                                 colorTexto = AzulLlegadas
                             )
                             InsigniaCambio(
-                                texto = "-${sucursalActual.cambioVendidos} vendidos",
+                                texto = "$totalUnidades stock",
                                 colorFondo = VerdeVentas.copy(alpha = 0.15f),
                                 colorTexto = VerdeVentas
                             )
                             InsigniaCambio(
-                                texto = "-${sucursalActual.cambioMerma} merma",
+                                texto = "-$mermasContadas mermas",
                                 colorFondo = RojoMerma.copy(alpha = 0.15f),
                                 colorTexto = RojoMerma
                             )
@@ -288,28 +246,56 @@ fun InventarioExtraScreen(navController: NavController) {
 
                         Button(
                             onClick = {
-                                sucursales = sucursales.mapIndexed { idx, suc ->
-                                    if (idx == selectedTabIndex) {
-                                        suc.copy(
-                                            diasSinCambios = 0,
-                                            tiempoTranscurridoFormateado = "Hace 1 minuto"
-                                        )
-                                    } else suc
+                                scope.launch {
+                                    cargandoSincronizacion = true
+                                    mensajeResultado = null
+                                    try {
+                                        when (val resultado =
+                                            inventarioViewModel.repository.actualizarCatalogoDesdeBackend(sucursalActual)) {
+                                            is ResultadoActualizacionCatalogo.Exito -> {
+                                                val estadoBackend = inventarioViewModel.repository
+                                                    .obtenerEstadoSincronizacionBackend(sucursalActual)
+                                                tiempoTranscurrido = estadoBackend?.textoUltimaSincronizacion
+                                                    ?.ifBlank { "Consultado ahora" } ?: "Consultado ahora"
+                                                noDisponible = estadoBackend?.noDisponible == true ||
+                                                    estadoBackend?.estado == "NO_DISPONIBLE"
+                                                mensajeResultado =
+                                                    "Catálogo actualizado: ${resultado.productosActualizados} productos recibidos."
+                                                errorResultado = false
+                                            }
+                                            is ResultadoActualizacionCatalogo.Error -> {
+                                                mensajeResultado = resultado.mensaje
+                                                errorResultado = true
+                                            }
+                                        }
+                                    } finally {
+                                        cargandoSincronizacion = false
+                                    }
                                 }
-                                mensajeSincronizacion = true
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = VerdeAzulado),
+                            enabled = !cargandoSincronizacion,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Icon(Icons.Default.Refresh, contentDescription = null)
-                            Spacer(Modifier.width(6.dp))
-                            Text("Actualizar ahora")
+                            if (cargandoSincronizacion) {
+                                CircularProgressIndicator(
+                                    color = Color.White,
+                                    strokeWidth = 2.dp,
+                                    modifier = Modifier.height(18.dp).width(18.dp)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text("Sincronizando...")
+                            } else {
+                                Icon(Icons.Default.Refresh, contentDescription = null)
+                                Spacer(Modifier.width(6.dp))
+                                Text("Actualizar desde backend")
+                            }
                         }
 
-                        AnimatedVisibility(visible = mensajeSincronizacion) {
+                        mensajeResultado?.let { msg ->
                             Text(
-                                text = "¡Sucursal sincronizada exitosamente con backend!",
-                                color = VerdeVentas,
+                                text = msg,
+                                color = if (errorResultado) MaterialTheme.colorScheme.error else VerdeVentas,
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.padding(top = 4.dp)
                             )
@@ -317,16 +303,17 @@ fun InventarioExtraScreen(navController: NavController) {
                     }
                 }
 
+                // Barra de búsqueda por sucursal
                 OutlinedTextField(
                     value = textoBusqueda,
                     onValueChange = { textoBusqueda = it },
-                    placeholder = { Text("Buscar producto en ${sucursalActual.nombre}...") },
+                    placeholder = { Text("Buscar producto en $sucursalActual...") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                if (!sucursalActual.estaDisponible) {
+                if (noDisponible) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
@@ -350,16 +337,32 @@ fun InventarioExtraScreen(navController: NavController) {
                 }
 
                 Text(
-                    text = "Inventario de ${sucursalActual.nombre} (${productosFiltrados.size} productos):",
+                    text = "Inventario Real de $sucursalActual (${productosFiltrados.size} productos):",
                     style = MaterialTheme.typography.titleSmall
                 )
 
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(productosFiltrados, key = { it.id }) { producto ->
-                        ItemProductoExtraCard(producto = producto)
+                if (productosFiltrados.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Aún no hay productos registrados en $sucursalActual.\nUsa el perfil o 'Actualizar ahora' para sincronizar.",
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(productosFiltrados, key = { it.id }) { producto ->
+                            ItemProductoExtraCard(producto = producto)
+                        }
                     }
                 }
             }

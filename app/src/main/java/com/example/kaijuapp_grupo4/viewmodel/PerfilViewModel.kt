@@ -22,6 +22,9 @@ class PerfilViewModel(application: Application) : AndroidViewModel(application) 
         .map { ruta -> ruta?.let { Uri.parse(it) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
+    val sucursalActiva: StateFlow<String> = estadoDataStore.obtenerSucursalActiva()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "San Bernardo")
+
     fun alternarAlertas() {
         viewModelScope.launch {
             estadoDataStore.guardarAlertas(!alertasActivas.value)
@@ -31,6 +34,12 @@ class PerfilViewModel(application: Application) : AndroidViewModel(application) 
     fun guardarFoto(uri: Uri) {
         viewModelScope.launch {
             estadoDataStore.guardarFoto(uri.toString())
+        }
+    }
+
+    fun seleccionarSucursal(sucursal: String) {
+        viewModelScope.launch {
+            estadoDataStore.guardarSucursalActiva(sucursal)
         }
     }
 }

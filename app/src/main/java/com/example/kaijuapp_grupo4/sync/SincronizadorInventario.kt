@@ -12,36 +12,36 @@ class SincronizadorInventario(
 ) {
 
     suspend fun sincronizarSucursal(sucursal: String): ResultadoSincronizacion {
-        val pendientes = operacionPendienteDao.obtenerPorSucursal(sucursal)
-        if (pendientes.isEmpty()) {
-            return ResultadoSincronizacion.Exito(
-                sucursal = sucursal,
-                operacionesAplicadas = 0,
-                mensaje = "No hay operaciones pendientes para sincronizar"
-            )
-        }
-
-        val operacionesDto = pendientes.map { op ->
-            OperacionDto(
-                accion = op.accion,
-                productoId = op.productoId,
-                nombre = op.nombre,
-                categoria = op.categoria,
-                precio = op.precio,
-                cantidadDisponible = op.cantidadDisponible,
-                stockMinimo = op.stockMinimo,
-                sucursal = op.sucursal,
-                imagenUri = op.imagenUri,
-                cantidad = op.cantidad
-            )
-        }
-
-        val request = LoteSincronizacionRequest(
-            sucursal = sucursal,
-            operaciones = operacionesDto
-        )
-
         return try {
+            val pendientes = operacionPendienteDao.obtenerPorSucursal(sucursal)
+            if (pendientes.isEmpty()) {
+                return ResultadoSincronizacion.Exito(
+                    sucursal = sucursal,
+                    operacionesAplicadas = 0,
+                    mensaje = "No hay operaciones pendientes para sincronizar"
+                )
+            }
+
+            val operacionesDto = pendientes.map { op ->
+                OperacionDto(
+                    accion = op.accion,
+                    productoId = op.productoId,
+                    nombre = op.nombre,
+                    categoria = op.categoria,
+                    precio = op.precio,
+                    cantidadDisponible = op.cantidadDisponible,
+                    stockMinimo = op.stockMinimo,
+                    sucursal = op.sucursal,
+                    imagenUri = op.imagenUri,
+                    cantidad = op.cantidad
+                )
+            }
+
+            val request = LoteSincronizacionRequest(
+                sucursal = sucursal,
+                operaciones = operacionesDto
+            )
+
             val response = backendApi.enviarLoteSincronizacion(request)
             if (response.isSuccessful && response.body() != null) {
                 val body = response.body()!!
@@ -66,7 +66,7 @@ class SincronizadorInventario(
         } catch (e: Exception) {
             ResultadoSincronizacion.Error(
                 sucursal = sucursal,
-                mensaje = "Sin conexión al servidor: ${e.localizedMessage ?: "Error de red"}"
+                mensaje = "No se pudo sincronizar con el backend: ${e.localizedMessage ?: "error inesperado"}"
             )
         }
     }

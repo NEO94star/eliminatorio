@@ -21,9 +21,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -34,8 +37,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,9 +54,11 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.kaijuapp_grupo4.model.Producto
 import com.example.kaijuapp_grupo4.navigation.Screen
+import com.example.kaijuapp_grupo4.sync.ResultadoSincronizacion
 import com.example.kaijuapp_grupo4.ui.components.formatearPrecio
 import com.example.kaijuapp_grupo4.ui.theme.obtenerWindowSizeClass
 import com.example.kaijuapp_grupo4.viewmodel.InventarioViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,6 +67,11 @@ fun InventarioScreen(
     inventarioViewModel: InventarioViewModel
 ) {
     val productos by inventarioViewModel.productos.collectAsState()
+    val sucursalActiva by inventarioViewModel.sucursalActiva.collectAsState()
+    val scope = rememberCoroutineScope()
+    var sincronizando by remember { mutableStateOf(false) }
+    var mensajeSincronizacion by remember { mutableStateOf<String?>(null) }
+    var errorSincronizacion by remember { mutableStateOf(false) }
     val columnas = if (obtenerWindowSizeClass().widthSizeClass == WindowWidthSizeClass.Compact) 1 else 2
 
     Scaffold(
@@ -91,9 +105,65 @@ fun InventarioScreen(
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
+            Button(
+                onClick = {
+                    scope.launch {
+                        sincronizando = true
+                        mensajeSincronizacion = null
+                        try {
+                            when (val resultado =
+                                inventarioViewModel.repository.enviarPendientesAlBackend(sucursalActiva)) {
+                                is ResultadoSincronizacion.Exito -> {
+                                    mensajeSincronizacion = resultado.mensaje
+                                    errorSincronizacion = false
+                                }
+                                is ResultadoSincronizacion.Error -> {
+                                    mensajeSincronizacion = resultado.mensaje
+                                    errorSincronizacion = true
+                                }
+                            }
+                        } finally {
+                            sincronizando = false
+                        }
+                    }
+                },
+                enabled = !sincronizando,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+            ) {
+                if (sincronizando) {
+                    CircularProgressIndicator(
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Enviando cambios...")
+                } else {
+                    Icon(Icons.Default.Refresh, contentDescription = null)
+                    Spacer(Modifier.width(6.dp))
+                    Text("Enviar cambios pendientes")
+                }
+            }
+
+            mensajeSincronizacion?.let { mensaje ->
+                Text(
+                    text = mensaje,
+                    color = if (errorSincronizacion) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
             if (productos.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -106,7 +176,8 @@ fun InventarioScreen(
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(columnas),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.weight(1f)
                 ) {
                     items(productos, key = { it.id }) { producto ->
                         ItemProductoCard(

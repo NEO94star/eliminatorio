@@ -14,7 +14,9 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerValue
@@ -38,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.kaijuapp_grupo4.navigation.Screen
+import com.example.kaijuapp_grupo4.ui.theme.VerdeAzulado
 import com.example.kaijuapp_grupo4.ui.theme.obtenerWindowSizeClass
 import kotlinx.coroutines.launch
 
@@ -50,6 +53,7 @@ fun HomeScreen(navController: NavController) {
 
     val opcionesMenu = listOf(
         Triple(Icons.AutoMirrored.Filled.List, "Inventario de Productos", Screen.Inventario),
+        Triple(Icons.Default.Storefront, "Inventario Extra (Sucursales)", Screen.InventarioExtra),
         Triple(Icons.Default.Add, "Registrar Producto", Screen.FormularioProducto),
         Triple(Icons.Default.ShoppingCart, "Registrar Venta", Screen.ResumenVenta),
         Triple(Icons.Default.Person, "Perfil de Usuario / Ajustes", Screen.Perfil)
@@ -57,6 +61,7 @@ fun HomeScreen(navController: NavController) {
 
     val accionesPrincipales = listOf(
         "Ver Inventario" to Screen.Inventario,
+        "Inventario Extra (Sucursales)" to Screen.InventarioExtra,
         "Registrar Nuevo Producto" to Screen.FormularioProducto,
         "Registrar Venta" to Screen.ResumenVenta
     )
@@ -71,9 +76,21 @@ fun HomeScreen(navController: NavController) {
                     modifier = Modifier.padding(16.dp)
                 )
                 opcionesMenu.forEach { (icono, etiqueta, destino) ->
+                    val esInventarioExtra = destino == Screen.InventarioExtra
                     NavigationDrawerItem(
-                        icon = { Icon(icono, contentDescription = etiqueta) },
-                        label = { Text(etiqueta) },
+                        icon = {
+                            Icon(
+                                icono,
+                                contentDescription = etiqueta,
+                                tint = if (esInventarioExtra) VerdeAzulado else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        },
+                        label = {
+                            Text(
+                                etiqueta,
+                                color = if (esInventarioExtra) VerdeAzulado else MaterialTheme.colorScheme.onSurface
+                            )
+                        },
                         selected = false,
                         onClick = {
                             scope.launch { drawerState.close() }
@@ -121,14 +138,16 @@ fun HomeScreen(navController: NavController) {
                             style = MaterialTheme.typography.titleMedium
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = "Gestiona tus productos, evita quiebres de inventario y registra movimientos fácilmente.")
+                        Text(text = "Gestiona tus productos, evita quiebres de inventario y monitorea sucursales fácilmente.")
                     }
                 }
 
                 if (esCompacto) {
                     accionesPrincipales.forEach { (texto, destino) ->
+                        val esExtra = destino == Screen.InventarioExtra
                         Button(
                             onClick = { navController.navigate(destino.route) },
+                            colors = if (esExtra) ButtonDefaults.buttonColors(containerColor = VerdeAzulado) else ButtonDefaults.buttonColors(),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(texto)
@@ -140,8 +159,10 @@ fun HomeScreen(navController: NavController) {
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         accionesPrincipales.forEach { (texto, destino) ->
+                            val esExtra = destino == Screen.InventarioExtra
                             Button(
                                 onClick = { navController.navigate(destino.route) },
+                                colors = if (esExtra) ButtonDefaults.buttonColors(containerColor = VerdeAzulado) else ButtonDefaults.buttonColors(),
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Text(texto)
@@ -153,4 +174,3 @@ fun HomeScreen(navController: NavController) {
         }
     }
 }
-

@@ -18,11 +18,15 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -39,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.kaijuapp_grupo4.ui.components.ImagenInteligente
 import com.example.kaijuapp_grupo4.ui.components.rememberSelectorImagen
+import com.example.kaijuapp_grupo4.ui.theme.VerdeAzulado
 import com.example.kaijuapp_grupo4.ui.theme.VerdeExito
 import com.example.kaijuapp_grupo4.viewmodel.PerfilViewModel
 import kotlinx.coroutines.delay
@@ -51,7 +56,11 @@ fun PerfilScreen(
 ) {
     val fotoPerfil by perfilViewModel.fotoPerfil.collectAsState()
     val alertasActivas by perfilViewModel.alertasActivas.collectAsState()
+    val sucursalActiva by perfilViewModel.sucursalActiva.collectAsState()
+
     var mostrarMensaje by remember { mutableStateOf(false) }
+    var expandedSucursal by remember { mutableStateOf(false) }
+    val listaSucursales = listOf("San Bernardo", "Maipú", "Persa BioBío")
 
     val selectorImagen = rememberSelectorImagen(prefijoArchivo = "perfil") { uri ->
         perfilViewModel.guardarFoto(uri)
@@ -110,7 +119,44 @@ fun PerfilScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Selector de Sucursal Asignada al Vendedor
+            ExposedDropdownMenuBox(
+                expanded = expandedSucursal,
+                onExpandedChange = { expandedSucursal = !expandedSucursal }
+            ) {
+                OutlinedTextField(
+                    value = sucursalActiva,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Sucursal Asignada al Administrador") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSucursal) },
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = VerdeAzulado,
+                        focusedLabelColor = VerdeAzulado
+                    ),
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expandedSucursal,
+                    onDismissRequest = { expandedSucursal = false }
+                ) {
+                    listaSucursales.forEach { sucursal ->
+                        DropdownMenuItem(
+                            text = { Text(sucursal) },
+                            onClick = {
+                                perfilViewModel.seleccionarSucursal(sucursal)
+                                expandedSucursal = false
+                                mostrarMensaje = true
+                            }
+                        )
+                    }
+                }
+            }
 
             Button(
                 onClick = {
@@ -133,4 +179,3 @@ fun PerfilScreen(
         }
     }
 }
-

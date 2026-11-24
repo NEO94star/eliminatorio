@@ -21,10 +21,7 @@ import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,11 +35,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -60,8 +55,6 @@ fun FormularioProductoScreen(
     inventarioViewModel: InventarioViewModel
 ) {
     val formState by inventarioViewModel.formState.collectAsState()
-    var expandedSucursal by remember { mutableStateOf(false) }
-    val listaSucursales = listOf("San Bernardo", "Central", "Norte", "Maipú", "Persa BioBío")
 
     val selectorImagen = rememberSelectorImagen(prefijoArchivo = "producto") { uri ->
         inventarioViewModel.onImagenChange(uri)
@@ -142,38 +135,6 @@ fun FormularioProductoScreen(
                     Icon(Icons.Default.CameraAlt, contentDescription = null)
                     Spacer(Modifier.width(4.dp))
                     Text("Cámara")
-                }
-            }
-
-            // Desplegable Selector de Sucursal
-            ExposedDropdownMenuBox(
-                expanded = expandedSucursal,
-                onExpandedChange = { expandedSucursal = !expandedSucursal }
-            ) {
-                OutlinedTextField(
-                    value = "Sucursal: ${formState.sucursal}",
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Sucursal del Producto *") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSucursal) },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
-                )
-
-                ExposedDropdownMenu(
-                    expanded = expandedSucursal,
-                    onDismissRequest = { expandedSucursal = false }
-                ) {
-                    listaSucursales.forEach { sucursal ->
-                        DropdownMenuItem(
-                            text = { Text(sucursal) },
-                            onClick = {
-                                inventarioViewModel.onSucursalChange(sucursal)
-                                expandedSucursal = false
-                            }
-                        )
-                    }
                 }
             }
 
