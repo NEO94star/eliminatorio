@@ -11,5 +11,6 @@ data class Producto(
     val precio: Double = 0.0,
     val cantidadDisponible: Int = 0,
     val stockMinimo: Int = 5,
-    val imagenUri: String? = null
+    val imagenUri: String? = null,
+    val sucursal: String = "San Bernardo"
 )

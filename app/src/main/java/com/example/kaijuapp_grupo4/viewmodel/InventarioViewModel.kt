@@ -46,6 +46,10 @@ class InventarioViewModel(application: Application) : AndroidViewModel(applicati
         _formState.update { it.copy(categoria = valor.replace("\n", "").take(30)) }
     }
 
+    fun onSucursalChange(valor: String) {
+        _formState.update { it.copy(sucursal = valor) }
+    }
+
     fun onPrecioChange(valor: String) {
         _formState.update {
             it.copy(
@@ -125,7 +129,8 @@ class InventarioViewModel(application: Application) : AndroidViewModel(applicati
             precio = precio,
             cantidadDisponible = cantidad,
             stockMinimo = stockMinimo,
-            imagenUri = estado.imagenUri?.toString()
+            imagenUri = estado.imagenUri?.toString(),
+            sucursal = estado.sucursal
         )
         viewModelScope.launch { repository.agregarProducto(nuevoProducto) }
         _formState.value = ProductoFormState()
@@ -178,4 +183,3 @@ class InventarioViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 }
-
